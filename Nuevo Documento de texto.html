@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Conciencia Fonológica</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Un color de fondo suave */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #game-container {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+            text-align: center;
+            border: 4px solid #4CAF50; /* Borde temático */
+            position: relative; /* Para posicionar el score */
+        }
+        .btn {
+            background-color: #4CAF50; /* Verde principal */
+            color: white;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn {
+            background-color: #90CAF9; /* Azul claro */
+            color: #1A237E; /* Azul oscuro para texto */
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+            border: 2px solid #64B5F6;
+            flex-grow: 1; /* Para que ocupen espacio igual */
+            margin: 8px; /* Espacio entre botones */
+            min-width: 120px; /* Ancho mínimo para legibilidad */
+        }
+        .option-btn:hover {
+            background-color: #64B5F6;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
+        }
+        .option-btn.selected {
+            background-color: #FFC107; /* Amarillo para seleccionado */
+            border-color: #FFA000;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        .option-btn.correct {
+            background-color: #81C784; /* Verde para correcto */
+            border-color: #4CAF50;
+        }
+        .option-btn.incorrect {
+            background-color: #EF9A9A; /* Rojo para incorrecto */
+            border-color: #F44336;
+        }
+        #feedback-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: 700;
+            text-align: center;
+            min-height: 50px; /* Para evitar CLS */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .feedback-correct {
+            background-color: #DCEDC8; /* Verde muy claro */
+            color: #2E7D32; /* Verde oscuro */
+            border: 2px solid #8BC34A;
+        }
+        .feedback-incorrect {
+            background-color: #FFCDD2; /* Rojo muy claro */
+            color: #D32F2F; /* Rojo oscuro */
+            border: 2px solid #F44336;
+        }
+        #score-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #FFF3E0; /* Naranja claro */
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 700;
+            color: #EF6C00;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        #activity-image {
+            max-width: 180px;
+            height: auto;
+            border-radius: 15px;
+            border: 3px solid #FFAB40; /* Borde para imágenes */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #game-container {
+                padding: 20px;
+            }
+            .btn, .option-btn {
+                padding: 10px 20px;
+                font-size: 0.9em;
+            }
+            .level-select-grid, .options-grid {
+                flex-direction: column; /* Apila botones en pantallas pequeñas */
+            }
+        }
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            #game-container {
+                border-radius: 10px;
+                padding: 15px;
+            }
+            #score-display {
+                top: 10px;
+                right: 10px;
+                padding: 5px 10px;
+                font-size: 0.8em;
+            }
+            #activity-image {
+                max-width: 120px;
+            }
+            .option-btn {
+                margin: 5px;
+            }
+            #feedback-message {
+                font-size: 1em;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div id="game-container" class="bg-white rounded-xl shadow-lg p-8 max-w-2xl w-full relative">
+        <!-- Puntuación General -->
+        <div id="score-display">Puntuación: 0</div>
+
+        <!-- Pantalla de Bienvenida -->
+        <div id="welcome-screen" class="text-center">
+            <h1 class="text-4xl font-bold text-gray-800 mb-6">¡Aprende Fonología Jugando!</h1>
+            <p class="text-lg text-gray-600 mb-8">
+                Bienvenido/a a este juego interactivo diseñado para fortalecer tu conciencia fonológica.
+                Trabajaremos con sílabas, sonidos dentro de las palabras y los sonidos individuales de las letras.
+                ¡Prepárate para divertirte y aprender!
+            </p>
+            <button id="start-game-btn" class="btn text-xl">
+                Comenzar Juego
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play-circle"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+            </button>
+        </div>
+
+        <!-- Pantalla de Selección de Nivel -->
+        <div id="level-selection-screen" class="hidden text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">Selecciona un Nivel</h2>
+            <div class="flex flex-wrap justify-center gap-4 level-select-grid">
+                <button data-level="silabica" class="btn text-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-equal"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 10h10"/><path d="M7 14h10"/></svg>
+                    Conciencia Silábica
+                </button>
+                <button data-level="intrasilabica" class="btn text-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ruler"><path d="M22 17H2L12 2L22 17Z"/><path d="M12 15L7 10L12 5L17 10L12 15Z"/></svg>
+                    Conciencia Intrasilábica
+                </button>
+                <button data-level="fonemica" class="btn text-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-a-large-small"><path d="M21 14H11"/><path d="M15 14l1.5-4L18 14"/><path d="M3 16h5c.3 0 .5-.2.5-.5V7.5c0-.8-.7-1.5-1.5-1.5h-2c-.8 0-1.5.7-1.5 1.5v8"/><path d="M12.5 6.5L11 9h8"/></svg>
+                    Conciencia Fonémica
+                </button>
+            </div>
+        </div>
+
+        <!-- Pantalla de Juego Activa -->
+        <div id="game-screen" class="hidden text-center">
+            <h3 id="level-title" class="text-2xl font-semibold text-gray-700 mb-4"></h3>
+            <p id="question-text" class="text-xl text-gray-800 mb-4"></p>
+            <img id="activity-image" class="mx-auto my-4 rounded-lg shadow-md border-4 border-yellow-500" alt="Imagen de la actividad">
+
+            <!-- Botón para reproducir sonido -->
+            <button id="play-sound-btn" class="btn text-base mb-4">
+                Reproducir Sonido
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-volume-2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M22.39 2.61a15 15 0 0 1 0 18.78"/></svg>
+            </button>
+
+            <!-- Área de opciones (flexible para diferentes tipos de actividad) -->
+            <div id="options-container" class="flex flex-wrap justify-center gap-3 mt-4 options-grid">
+                <!-- Las opciones se inyectarán aquí -->
+            </div>
+
+            <!-- Mensaje de retroalimentación -->
+            <div id="feedback-message" class="hidden mt-6"></div>
+
+            <!-- Botón para avanzar a la siguiente actividad -->
+            <button id="next-activity-btn" class="btn mt-6 hidden">
+                Siguiente Actividad
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right-circle"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="m12 16 4-4-4-4"/></svg>
+            </button>
+        </div>
+
+        <!-- Pantalla de Resumen de Nivel -->
+        <div id="level-summary-screen" class="hidden text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">¡Nivel Completado!</h2>
+            <p class="text-xl text-gray-700 mb-4">Has terminado el nivel de <span id="summary-level-name" class="font-bold text-blue-600"></span>.</p>
+            <p class="text-2xl font-semibold text-gray-800 mb-6">Tu puntuación en este nivel: <span id="level-score-display" class="text-green-600">0</span> de <span id="level-total-questions" class="text-gray-600">0</span></p>
+            <button id="return-to-levels-btn" class="btn text-lg mr-4">
+                Volver a Niveles
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left-circle"><circle cx="12" cy="12" r="10"/><path d="M16 12H8"/><path d="m12 8-4 4 4 4"/></svg>
+            </button>
+            <button id="restart-game-from-summary-btn" class="btn text-lg">
+                Reiniciar Juego
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.76 2.75L3 8"/><path d="M3 3v5h5"/></svg>
+            </button>
+        </div>
+
+        <!-- Pantalla de Juego Finalizado -->
+        <div id="game-over-screen" class="hidden text-center">
+            <h2 class="text-4xl font-bold text-green-700 mb-6">¡Juego Completado!</h2>
+            <p class="text-2xl text-gray-800 mb-4">¡Felicidades, has terminado todas las actividades!</p>
+            <p class="text-3xl font-bold text-blue-700 mb-6">Tu puntuación total: <span id="final-score-display" class="text-purple-600">0</span></p>
+            <p class="text-lg text-gray-600 mb-8">
+                ¡Sigue practicando para mejorar aún más tu conciencia fonológica!
+            </p>
+            <button id="restart-game-btn" class="btn text-xl">
+                Jugar de Nuevo
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-ccw"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.76 2.75L3 8"/><path d="M3 3v5h5"/><path d="M21 12a9 9 0 0 0-9 9 9.75 9.75 0 0 0 6.76-2.75L21 16"/><path d="M21 21v-5h-5"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Define los datos del juego para cada nivel
+        const gameData = {
+            silabica: [
+                {
+                    id: 'silabica-1',
+                    type: 'segmentar-silabas',
+                    prompt: 'manzana',
+                    image: 'https://placehold.co/200x200/FFD700/000?text=Manzana',
+                    correctAnswer: ['man', 'za', 'na'],
+                    options: ['man', 'za', 'na', 'na', 'zan', 'ma']
+                },
+                {
+                    id: 'silabica-2',
+                    type: 'contar-silabas',
+                    prompt: 'elefante',
+                    image: 'https://placehold.co/200x200/ADD8E6/000?text=Elefante',
+                    correctAnswer: 4,
+                    options: [2, 3, 4, 5]
+                },
+                {
+                    id: 'silabica-3',
+                    type: 'segmentar-silabas',
+                    prompt: 'mariposa',
+                    image: 'https://placehold.co/200x200/FFB6C1/000?text=Mariposa',
+                    correctAnswer: ['ma', 'ri', 'po', 'sa'],
+                    options: ['ma', 'po', 'ri', 'sa', 'pa', 'mo']
+                },
+                {
+                    id: 'silabica-4',
+                    type: 'contar-silabas',
+                    prompt: 'computadora',
+                    image: 'https://placehold.co/200x200/B0E0E6/000?text=Computadora',
+                    correctAnswer: 5,
+                    options: [3, 4, 5, 6]
+                }
+            ],
+            intrasilabica: [
+                {
+                    id: 'intrasilabica-1',
+                    type: 'encontrar-rimas',
+                    prompt: 'sol',
+                    image: 'https://placehold.co/200x200/FF4500/FFF?text=Sol',
+                    correctAnswer: 'col',
+                    options: [
+                        { word: 'col', image: 'https://placehold.co/120x120/FF0000/FFF?text=Col' },
+                        { word: 'flor', image: 'https://placehold.co/120x120/00FF00/FFF?text=Flor' },
+                        { word: 'mesa', image: 'https://placehold.co/120x120/0000FF/FFF?text=Mesa' }
+                    ]
+                },
+                {
+                    id: 'intrasilabica-2',
+                    type: 'sonido-inicial-silaba',
+                    prompt: 'pelota',
+                    image: 'https://placehold.co/200x200/8A2BE2/FFF?text=Pelota',
+                    correctAnswer: 'pe',
+                    options: ['pe', 'lo', 'ta', 'pa']
+                },
+                {
+                    id: 'intrasilabica-3',
+                    type: 'encontrar-rimas',
+                    prompt: 'conejo',
+                    image: 'https://placehold.co/200x200/DAA520/FFF?text=Conejo',
+                    correctAnswer: 'espejo',
+                    options: [
+                        { word: 'cereza', image: 'https://placehold.co/120x120/FF6347/FFF?text=Cereza' },
+                        { word: 'espejo', image: 'https://placehold.co/120x120/8B008B/FFF?text=Espejo' },
+                        { word: 'queso', image: 'https://placehold.co/120x120/F0E68C/000?text=Queso' }
+                    ]
+                },
+                {
+                    id: 'intrasilabica-4',
+                    type: 'sonido-inicial-silaba',
+                    prompt: 'jirafa',
+                    image: 'https://placehold.co/200x200/FFA07A/000?text=Jirafa',
+                    correctAnswer: 'ji',
+                    options: ['ji', 'ra', 'fa', 'ga']
+                }
+            ],
+            fonemica: [
+                {
+                    id: 'fonemica-1',
+                    type: 'sonido-inicial-fonema',
+                    prompt: 'mesa',
+                    image: 'https://placehold.co/200x200/4B0082/FFF?text=Mesa',
+                    correctAnswer: 'm',
+                    options: ['m', 'p', 's', 'l']
+                },
+                {
+                    id: 'fonemica-2',
+                    type: 'sonido-final-fonema',
+                    prompt: 'pez',
+                    image: 'https://placehold.co/200x200/FFC0CB/000?text=Pez',
+                    correctAnswer: 'z',
+                    options: ['p', 'e', 'z', 'l']
+                },
+                {
+                    id: 'fonemica-3',
+                    type: 'sonido-inicial-fonema',
+                    prompt: 'casa',
+                    image: 'https://placehold.co/200x200/A0522D/FFF?text=Casa',
+                    correctAnswer: 'c',
+                    options: ['c', 'g', 'q', 'k']
+                },
+                {
+                    id: 'fonemica-4',
+                    type: 'sonido-final-fonema',
+                    prompt: 'arbol',
+                    image: 'https://placehold.co/200x200/8B4513/FFF?text=Arbol',
+                    correctAnswer: 'l',
+                    options: ['a', 'r', 'b', 'l']
+                }
+            ]
+        };
+
+        // Elementos del DOM
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const levelSelectionScreen = document.getElementById('level-selection-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const levelSummaryScreen = document.getElementById('level-summary-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+
+        const startGameBtn = document.getElementById('start-game-btn');
+        const levelButtons = document.querySelectorAll('#level-selection-screen .btn');
+        const levelTitle = document.getElementById('level-title');
+        const questionText = document.getElementById('question-text');
+        const activityImage = document.getElementById('activity-image');
+        const playSoundBtn = document.getElementById('play-sound-btn');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const nextActivityBtn = document.getElementById('next-activity-btn');
+        const scoreDisplay = document.getElementById('score-display');
+
+        const summaryLevelName = document.getElementById('summary-level-name');
+        const levelScoreDisplay = document.getElementById('level-score-display');
+        const levelTotalQuestions = document.getElementById('level-total-questions');
+        const returnToLevelsBtn = document.getElementById('return-to-levels-btn');
+        const restartGameFromSummaryBtn = document.getElementById('restart-game-from-summary-btn');
+
+        const finalScoreDisplay = document.getElementById('final-score-display');
+        const restartGameBtn = document.getElementById('restart-game-btn');
+
+        // Variables de estado del juego
+        let currentLevel = '';
+        let currentActivityIndex = 0;
+        let score = 0;
+        let levelScore = 0;
+        let answeredCorrectly = false; // Para la retroalimentación
+
+        // Función para mostrar una pantalla y ocultar las demás
+        function showScreen(screenToShow) {
+            welcomeScreen.classList.add('hidden');
+            levelSelectionScreen.classList.add('hidden');
+            gameScreen.classList.add('hidden');
+            levelSummaryScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            screenToShow.classList.remove('hidden');
+        }
+
+        // Iniciar el juego desde la pantalla de bienvenida
+        startGameBtn.addEventListener('click', () => {
+            showScreen(levelSelectionScreen);
+            score = 0; // Reiniciar puntuación total al iniciar un nuevo juego
+            updateScoreDisplay();
+        });
+
+        // Manejar la selección de nivel
+        levelButtons.forEach(button => {
+            button.addEventListener('click', (event) => {
+                currentLevel = event.target.dataset.level;
+                currentActivityIndex = 0;
+                levelScore = 0;
+                showScreen(gameScreen);
+                loadActivity();
+            });
+        });
+
+        // Actualizar la visualización de la puntuación
+        function updateScoreDisplay() {
+            scoreDisplay.textContent = `Puntuación: ${score}`;
+        }
+
+        // Cargar y mostrar la actividad actual
+        function loadActivity() {
+            // Ocultar mensajes de retroalimentación y botón de siguiente
+            feedbackMessage.classList.add('hidden');
+            feedbackMessage.textContent = '';
+            feedbackMessage.classList.remove('feedback-correct', 'feedback-incorrect');
+            nextActivityBtn.classList.add('hidden');
+            answeredCorrectly = false; // Resetear el estado de respuesta
+
+            const activities = gameData[currentLevel];
+            if (currentActivityIndex >= activities.length) {
+                // Nivel completado
+                showLevelSummary();
+                return;
+            }
+
+            const activity = activities[currentActivityIndex];
+            let levelName = '';
+            if (currentLevel === 'silabica') levelName = 'Conciencia Silábica';
+            else if (currentLevel === 'intrasilabica') levelName = 'Conciencia Intrasilábica';
+            else if (currentLevel === 'fonemica') levelName = 'Conciencia Fonémica';
+
+            levelTitle.textContent = `Nivel: ${levelName}`;
+            questionText.textContent = `¿${activity.prompt.charAt(0).toUpperCase() + activity.prompt.slice(1)}?`;
+            activityImage.src = activity.image;
+            activityImage.alt = activity.prompt;
+
+            optionsContainer.innerHTML = ''; // Limpiar opciones anteriores
+
+            // Mezclar opciones para que no siempre aparezcan en el mismo orden
+            const shuffledOptions = [...activity.options].sort(() => Math.random() - 0.5);
+
+            // Renderizar opciones según el tipo de actividad
+            switch (activity.type) {
+                case 'segmentar-silabas':
+                    questionText.textContent = `Haz clic en las sílabas en el orden correcto de "${activity.prompt}":`;
+                    shuffledOptions.forEach(option => {
+                        const btn = document.createElement('button');
+                        btn.classList.add('option-btn');
+                        btn.textContent = option;
+                        btn.dataset.value = option;
+                        btn.addEventListener('click', () => handleSyllableClick(btn, activity.correctAnswer));
+                        optionsContainer.appendChild(btn);
+                    });
+                    break;
+                case 'contar-silabas':
+                    questionText.textContent = `¿Cuántas sílabas tiene "${activity.prompt}"?`;
+                    shuffledOptions.forEach(option => {
+                        const btn = document.createElement('button');
+                        btn.classList.add('option-btn');
+                        btn.textContent = option;
+                        btn.dataset.value = option;
+                        btn.addEventListener('click', () => checkAnswer(option, activity.correctAnswer));
+                        optionsContainer.appendChild(btn);
+                    });
+                    break;
+                case 'encontrar-rimas':
+                    questionText.textContent = `¿Qué palabra rima con "${activity.prompt}"?`;
+                    shuffledOptions.forEach(option => {
+                        const btn = document.createElement('button');
+                        btn.classList.add('option-btn', 'flex', 'flex-col', 'items-center');
+                        const img = document.createElement('img');
+                        img.src = option.image;
+                        img.alt = option.word;
+                        img.classList.add('w-24', 'h-24', 'object-contain', 'mb-2', 'rounded-md'); // Tamaño fijo y responsive
+                        const span = document.createElement('span');
+                        span.textContent = option.word;
+                        btn.appendChild(img);
+                        btn.appendChild(span);
+                        btn.dataset.value = option.word;
+                        btn.addEventListener('click', () => checkAnswer(option.word, activity.correctAnswer));
+                        optionsContainer.appendChild(btn);
+                    });
+                    break;
+                case 'sonido-inicial-silaba':
+                    questionText.textContent = `¿Cuál es la primera sílaba de "${activity.prompt}"?`;
+                    shuffledOptions.forEach(option => {
+                        const btn = document.createElement('button');
+                        btn.classList.add('option-btn');
+                        btn.textContent = option.toUpperCase();
+                        btn.dataset.value = option;
+                        btn.addEventListener('click', () => checkAnswer(option, activity.correctAnswer));
+                        optionsContainer.appendChild(btn);
+                    });
+                    break;
+                case 'sonido-inicial-fonema':
+                    questionText.textContent = `¿Con qué sonido (letra) empieza "${activity.prompt}"?`;
+                    shuffledOptions.forEach(option => {
+                        const btn = document.createElement('button');
+                        btn.classList.add('option-btn');
+                        btn.textContent = option.toUpperCase();
+                        btn.dataset.value = option;
+                        btn.addEventListener('click', () => checkAnswer(option, activity.correctAnswer));
+                        optionsContainer.appendChild(btn);
+                    });
+                    break;
+                case 'sonido-final-fonema':
+                    questionText.textContent = `¿Con qué sonido (letra) termina "${activity.prompt}"?`;
+                    shuffledOptions.forEach(option => {
+                        const btn = document.createElement('button');
+                        btn.classList.add('option-btn');
+                        btn.textContent = option.toUpperCase();
+                        btn.dataset.value = option;
+                        btn.addEventListener('click', () => checkAnswer(option, activity.correctAnswer));
+                        optionsContainer.appendChild(btn);
+                    });
+                    break;
+            }
+        }
+
+        // Manejar clic en sílabas para 'segmentar-silabas'
+        let selectedSyllables = [];
+        let correctSyllableIndex = 0;
+        function handleSyllableClick(clickedBtn, correctAnswer) {
+            if (answeredCorrectly) return; // No permitir más clics si ya respondió
+
+            const clickedValue = clickedBtn.dataset.value;
+
+            // Marcar la sílaba como seleccionada visualmente
+            if (!clickedBtn.classList.contains('selected')) {
+                clickedBtn.classList.add('selected');
+                selectedSyllables.push(clickedValue);
+
+                if (selectedSyllables[correctSyllableIndex] === correctAnswer[correctSyllableIndex]) {
+                    // Si la sílaba seleccionada es la correcta en la secuencia
+                    clickedBtn.classList.remove('selected');
+                    clickedBtn.classList.add('correct');
+                    correctSyllableIndex++;
+
+                    if (correctSyllableIndex === correctAnswer.length) {
+                        // Todas las sílabas seleccionadas correctamente
+                        showFeedback(true);
+                        answeredCorrectly = true;
+                        score += 10;
+                        levelScore += 10;
+                        updateScoreDisplay();
+                        nextActivityBtn.classList.remove('hidden');
+                    }
+                } else {
+                    // Sílaba incorrecta en la secuencia
+                    showFeedback(false);
+                    answeredCorrectly = true;
+                    clickedBtn.classList.add('incorrect');
+                    // Deshabilitar todos los botones para evitar más intentos
+                    optionsContainer.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+                    nextActivityBtn.classList.remove('hidden');
+                }
+            }
+        }
+
+
+        // Verificar la respuesta general (para actividades de selección)
+        function checkAnswer(selectedValue, correctAnswer) {
+            if (answeredCorrectly) return; // No permitir más clics si ya respondió
+
+            const isCorrect = selectedValue === correctAnswer;
+            showFeedback(isCorrect);
+            answeredCorrectly = true; // Marcar que ya se respondió esta pregunta
+
+            // Actualizar la clase de los botones para retroalimentación visual
+            optionsContainer.querySelectorAll('.option-btn').forEach(btn => {
+                btn.disabled = true; // Deshabilitar todos los botones después de la respuesta
+                if (btn.dataset.value == selectedValue) { // Usar == para comparar números y cadenas
+                    if (isCorrect) {
+                        btn.classList.add('correct');
+                    } else {
+                        btn.classList.add('incorrect');
+                    }
+                } else if (btn.dataset.value == correctAnswer) { // Mostrar la respuesta correcta si fue incorrecta
+                    btn.classList.add('correct');
+                }
+            });
+
+            if (isCorrect) {
+                score += 10; // Sumar 10 puntos por respuesta correcta
+                levelScore += 10;
+            }
+            updateScoreDisplay();
+            nextActivityBtn.classList.remove('hidden');
+        }
+
+        // Mostrar retroalimentación formativa
+        function showFeedback(isCorrect) {
+            feedbackMessage.classList.remove('hidden');
+            if (isCorrect) {
+                feedbackMessage.textContent = '¡Correcto! ¡Muy bien!';
+                feedbackMessage.classList.remove('feedback-incorrect');
+                feedbackMessage.classList.add('feedback-correct');
+            } else {
+                feedbackMessage.textContent = 'Incorrecto. ¡Sigue intentándolo!';
+                feedbackMessage.classList.remove('feedback-correct');
+                feedbackMessage.classList.add('feedback-incorrect');
+            }
+        }
+
+        // Reproducir sonido (simulado)
+        playSoundBtn.addEventListener('click', () => {
+            const activity = gameData[currentLevel][currentActivityIndex];
+            const wordToPronounce = activity.prompt;
+            // En un entorno real, aquí se usaría la API Web Audio o un elemento <audio>
+            // Para esta demostración, mostramos un mensaje.
+            feedbackMessage.classList.remove('hidden', 'feedback-correct', 'feedback-incorrect');
+            feedbackMessage.textContent = `Reproduciendo sonido: "${wordToPronounce}"`;
+            feedbackMessage.style.backgroundColor = '#E0F7FA'; // Azul muy claro
+            feedbackMessage.style.color = '#006064'; // Cian oscuro
+            feedbackMessage.style.borderColor = '#4DD0E1';
+        });
+
+        // Manejar el botón de siguiente actividad
+        nextActivityBtn.addEventListener('click', () => {
+            currentActivityIndex++;
+            selectedSyllables = []; // Resetear para la siguiente actividad de sílabas
+            correctSyllableIndex = 0; // Resetear para la siguiente actividad de sílabas
+            loadActivity();
+        });
+
+        // Mostrar resumen del nivel
+        function showLevelSummary() {
+            let levelName = '';
+            if (currentLevel === 'silabica') levelName = 'Conciencia Silábica';
+            else if (currentLevel === 'intrasilabica') levelName = 'Conciencia Intrasilábica';
+            else if (currentLevel === 'fonemica') levelName = 'Conciencia Fonémica';
+
+            summaryLevelName.textContent = levelName;
+            levelScoreDisplay.textContent = levelScore;
+            levelTotalQuestions.textContent = gameData[currentLevel].length * 10; // Cada pregunta vale 10 puntos
+            showScreen(levelSummaryScreen);
+
+            // Verificar si todos los niveles han sido completados
+            const allLevelsCompleted = Object.keys(gameData).every(level => {
+                // Comprobar si todas las actividades de este nivel han sido intentadas
+                // (Para una evaluación sumativa más robusta, se necesitaría un seguimiento más granular)
+                return currentLevel === level ? currentActivityIndex >= gameData[level].length : true;
+            });
+
+            if (Object.keys(gameData).indexOf(currentLevel) === Object.keys(gameData).length - 1 && currentActivityIndex >= gameData[currentLevel].length) {
+                 showGameOverScreen(); // Si es el último nivel y se completó
+            }
+        }
+
+        // Volver a la selección de niveles
+        returnToLevelsBtn.addEventListener('click', () => {
+            showScreen(levelSelectionScreen);
+        });
+
+        // Reiniciar el juego desde el resumen de nivel
+        restartGameFromSummaryBtn.addEventListener('click', () => {
+            resetGame();
+            showScreen(welcomeScreen);
+        });
+
+        // Mostrar pantalla de juego finalizado
+        function showGameOverScreen() {
+            finalScoreDisplay.textContent = score;
+            showScreen(gameOverScreen);
+        }
+
+        // Reiniciar el juego completo
+        restartGameBtn.addEventListener('click', () => {
+            resetGame();
+            showScreen(welcomeScreen);
+        });
+
+        // Función para reiniciar todas las variables de estado del juego
+        function resetGame() {
+            currentLevel = '';
+            currentActivityIndex = 0;
+            score = 0;
+            levelScore = 0;
+            answeredCorrectly = false;
+            selectedSyllables = [];
+            correctSyllableIndex = 0;
+            updateScoreDisplay();
+        }
+
+        // Inicializar el juego mostrando la pantalla de bienvenida
+        showScreen(welcomeScreen);
+    </script>
+</body>
+</html>
